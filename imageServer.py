@@ -1,5 +1,3 @@
-#!/usr/bin/python2
-# -*- coding: UTF-8 -*-
 
 import bson.binary
 import datetime
@@ -17,7 +15,7 @@ from PIL import Image
 
 app = flask.Flask(__name__)
 app.debug = True
-db = pymongo.MongoClient('localhost',27017).test
+db = pymongo.MongoClient('192.168.1.110',27017).test
 allowed_format = ['jpeg','gif', 'png']
 
 
@@ -35,13 +33,13 @@ def index():
 	</html>
 	"""
 
-@app.route('/update/<sha1>')
+@app.route('/<sha1>/update')
 def test(sha1):
 	return """
 	<!doctype html>
 	<html>
 		<body>
-			<form action='/update/%s' method='post' enctype='multipart/form-data'>
+			<form action='/%s/update' method='post' enctype='multipart/form-data'>
 				<input type='file' name='updatedfile'>
 			    <input type='submit' value='Update'>
 			</form>
@@ -50,7 +48,7 @@ def test(sha1):
 	""" %(sha1,)
 
 #remove image
-@app.route('/remove/<sha1>')
+@app.route('/<sha1>/remove')
 def remove(sha1):
 	try:
 		imageitem = db.files.find_one({'sha1':sha1})
@@ -62,7 +60,7 @@ def remove(sha1):
 		flask.abort(404)
 
 #get image
-@app.route('/image/<sha1>')
+@app.route('/<sha1>')
 def download(sha1):
 	try:
 		imageitem = db.files.find_one({'sha1':sha1})
@@ -87,9 +85,14 @@ def upload():
 		flask.abort(400)
 
 #update image
-@app.route('/update/<sha1>', methods=['POST'])
+@app.route('/<sha1>/update', methods=['POST'])
 def update(sha1):
+	print (sha1)
+	print (dir(flask.request))
+	print (flask.request.headers)
+	print (flask.request.files)
 	updatedfile = flask.request.files['updatedfile']
+	
 	try:
 		update_file(sha1, updatedfile)
 		return flask.jsonify({'imageid':sha1})
